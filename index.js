@@ -74,13 +74,7 @@ const run = async () => {
             res.send(service);
         });
         
-
-        
-
-
-
-
-
+        //add Review
         app.post('/reviews', async (req, res) => {
             const reviewData = req.body;
             const result = await reviewsCollection.insertOne(reviewData);
