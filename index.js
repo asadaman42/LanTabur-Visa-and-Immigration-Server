@@ -16,36 +16,12 @@ const uri = `mongodb+srv://${process.env.LANTABUR_USER}:${process.env.LANTABUR_P
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-const checkingToken = (req, res, next) => {
-    const bearerWithToken = req.headers.authorization;
 
-    if (!bearerWithToken) {
-        return res.status(401).send({ message: 'No Permission' });
-    }
-    const token = bearerWithToken.split(' ')[1];
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (error, decoded) {
-        if (error) {
-            return res.status(403).send({ message: 'Access Overright' });
-        }
-        req.decoded = decoded;
-        next();
-    })
-
-}
 
 const run = async () => {
     try {
         const serviceCollection = client.db('LanTaburVisaUser').collection('services');
         const reviewsCollection = client.db('LanTaburVisaUser').collection('reviews');
-
-        app.post('/jwt', (req, res) => {
-            const user = req.body;
-            console.log(user);
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '6h' })
-            res.send({ token })
-        })
-
 
         // for Homepage Only
         app.get('/servicess', async (req, res) => {
@@ -81,33 +57,52 @@ const run = async () => {
         });
 
 
-        app.get('/myreviews', checkingToken, async (req, res) => {
-            const decoded = req.decoded;
-
-            console.log(decoded);
-            console.log(req);
-            
-            if(decoded.userID !== req.query.userID){
-                res.status(403).send({message: 'unauthorized access'})
-            }
-
-            let query = {};
-            if (req.query.userID) {
-                query = {
-                    userID: req.query.userID
-                }
-            }
+        app.get('/myreviews/:userID', async (req, res) => {
+            const userID = req.params.userID;
+            const query = { userID };
             const cursor = reviewsCollection.find(query);
-            const myReviews = await cursor.toArray();
-            res.send(myReviews);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
+
+
+        //for edit page
+        app.get('/editreview/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const service = await reviewsCollection.findOne(query);
+            res.send(service);
         });
         
+
+        
+
+
+
+
 
         app.post('/reviews', async (req, res) => {
             const reviewData = req.body;
             const result = await reviewsCollection.insertOne(reviewData);
             res.send(result);
         });
+
+
+        app.patch('/reviews/:reviewID', async (req, res) => {
+            console.log(req.body);
+            const reviewID = req.params.reviewID;
+            const updatedReview = req.body.review;
+            const query = { _id: ObjectId(reviewID) }
+            const updatedDoc = {
+                $set:{
+                    text: updatedReview
+                }
+            }
+            const result = await reviewsCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
+
+
         app.delete('/reviews/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
