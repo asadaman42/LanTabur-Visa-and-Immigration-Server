@@ -51,6 +51,7 @@ const run = async () => {
             const reviewData = req.body;
             const result = await reviewsCollection.insertOne(reviewData);
             res.send(result);
+            console.log(result);
         });
 
 
