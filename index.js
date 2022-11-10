@@ -87,6 +87,13 @@ const run = async () => {
             res.send(result);
         });
 
+        //add new service
+        app.post('/services', async (req, res) => {
+            const newService = req.body;
+            const result = await serviceCollection.insertOne(newService);
+            res.send(result);
+        });
+
 
         app.patch('/reviews/:reviewID', async (req, res) => {
             console.log(req.body);
