@@ -39,8 +39,16 @@ const run = async () => {
             const service = await serviceCollection.findOne(query);
             res.send(service);
         });
-        app.get('/review/:serviceID', async (req, res) => {            
+        app.get('/reviews/:serviceID', async (req, res) => {            
             const serviceID = req.params.serviceID;            
+            const query = { serviceID };
+            const cursor = reviewsCollection.find(query);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
+        app.get('/reviews/:userID', async (req, res) => { 
+            console.log(req.params);           
+            const userID = req.params.serviceID;            
             const query = { serviceID };
             const cursor = reviewsCollection.find(query);
             const services = await cursor.toArray();
